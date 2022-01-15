@@ -7,6 +7,7 @@ using System.Web;
 using AutoMapper;
 using AutoWrapper.Models;
 using AutoWrapper.Wrappers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.Data;
 using UrlShortner.Dtos.ShortUrl;
@@ -49,7 +50,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 var shortUrlResultDto = _mapper.Map<GetShortUrlDto>(shortUrlResult);
 
-                return shortUrlResult == null ? new ApiResponse("Provided short url was not found.",404) : new ApiResponse(shortUrlResultDto);
+                return shortUrlResult == null ? new ApiResponse("Provided short url was not found.",StatusCodes.Status404NotFound) : new ApiResponse(shortUrlResultDto);
             }
             catch (Exception e)
             {
@@ -91,7 +92,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 if (shortUrlToUpdate == null)
                 {
-                    return new ApiResponse("Provided short url was not found.", 404);
+                    return new ApiResponse("Provided short url was not found.", StatusCodes.Status404NotFound);
                 }
                 
                 shortUrlToUpdate.LongUrl = shortUrl.LongUrl;
@@ -123,7 +124,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 if (shortUrlToDelete == null)
                 {
-                    return new ApiResponse("Provided short url was not found.", 404);
+                    return new ApiResponse("Provided short url was not found.", StatusCodes.Status404NotFound);
                 }
                 
                 _context.ShortUrls.Remove(shortUrlToDelete);

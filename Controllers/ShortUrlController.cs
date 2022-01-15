@@ -32,13 +32,13 @@ namespace UrlShortner.Controllers
         }
         
         [HttpPost]
-        public async Task<ApiResponse> Create(CreateShortUrl shortUrl)
+        public async Task<ApiResponse> Create([FromBody] CreateShortUrl shortUrl)
         {
             return await _shortUrlService.CreateShortUrl(shortUrl);
         }
         
         [HttpPut]
-        public async Task<ApiResponse> Update(UpdateShortUrl shortUrl)
+        public async Task<ApiResponse> Update([FromBody] UpdateShortUrl shortUrl)
         {
             return await _shortUrlService.UpdateShortUrl(shortUrl);
         }

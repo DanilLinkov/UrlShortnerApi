@@ -11,6 +11,7 @@ namespace UrlShortner.Data
         }
 
         public DbSet<ShortUrl> ShortUrls { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
