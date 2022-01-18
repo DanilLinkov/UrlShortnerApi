@@ -20,6 +20,7 @@ using Microsoft.OpenApi.Models;
 using UrlShortner.Data;
 using UrlShortner.Models.Auth;
 using UrlShortner.Services.AuthService;
+using UrlShortner.Services.CacheService;
 using UrlShortner.Services.ShortUrlService;
 using UrlShortner.SessionStores;
 
@@ -44,6 +45,8 @@ namespace UrlShortner
             });
             
             services.AddAutoMapper(typeof(Startup));
+
+            services.AddHttpContextAccessor();
 
             services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
@@ -85,6 +88,16 @@ namespace UrlShortner
             
             services.AddScoped<IShortUrlService, ShortUrlService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAnonymousAuthService, AnonymousAuthService>();
+            services.AddScoped<ICacheService, CacheService>(o =>
+            {
+                var redisCacheOptions = new RedisCacheOptions()
+                {
+                    Configuration = "localhost:6379"
+                };
+                
+                return new CacheService(new RedisCache(redisCacheOptions));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

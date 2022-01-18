@@ -10,6 +10,5 @@ namespace UrlShortner.Services.AuthService
         Task<ApiResponse> Login(UserLoginDto user);
         Task<ApiResponse> Register(UserRegisterDto user);
         Task<ApiResponse> Logout();
-        Task<bool> UserExists(string username);
     }
 }

@@ -48,9 +48,7 @@ namespace UrlShortner.Services.AuthService
             {
                 new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString())
             };
-            
-            // var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            
+
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = true
@@ -84,11 +82,6 @@ namespace UrlShortner.Services.AuthService
         {
             await _signInManager.SignOutAsync();
             return new ApiResponse("User successfully logged out",  200);
-        }
-
-        public async Task<bool> UserExists(string username)
-        {
-            return await _userManager.FindByNameAsync(username) != null;
         }
     }
 }
