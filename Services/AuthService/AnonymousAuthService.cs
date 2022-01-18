@@ -11,12 +11,12 @@ namespace UrlShortner.Services.AuthService
 {
     public class AnonymousAuthService : IAnonymousAuthService
     {
-        private readonly IHttpContextAccessor _httpContentAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICacheService _cacheService;
 
         public AnonymousAuthService(IHttpContextAccessor httpContentAccessor, ICacheService cacheService)
         {
-            _httpContentAccessor = httpContentAccessor ?? throw new ArgumentNullException(nameof(httpContentAccessor));
+            _httpContextAccessor = httpContentAccessor ?? throw new ArgumentNullException(nameof(httpContentAccessor));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
         }
 
@@ -49,15 +49,15 @@ namespace UrlShortner.Services.AuthService
                 _cacheService.Remove(idCookie);
             }
             
-            _httpContentAccessor.HttpContext.Response.Cookies.Delete("ShortUrl-GUID");
-            _httpContentAccessor.HttpContext.Response.Cookies.Delete("ShortUrl-Session");
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("ShortUrl-GUID");
+            _httpContextAccessor.HttpContext.Response.Cookies.Delete("ShortUrl-Session");
 
             return Task.FromResult(new ApiResponse(StatusCodes.Status200OK, "Success"));
         }
         
         private string GetAnonymousUserId()
         {
-            _httpContentAccessor.HttpContext.Request.Cookies.TryGetValue("ShortUrl-GUID", out var idCookie);
+            _httpContextAccessor.HttpContext.Request.Cookies.TryGetValue("ShortUrl-GUID", out var idCookie);
             return idCookie;
         }
 
@@ -70,7 +70,7 @@ namespace UrlShortner.Services.AuthService
                 Secure = true
             };
             
-            _httpContentAccessor.HttpContext.Response.Cookies.Append("ShortUrl-GUID", anonymousUserId.ToString(), anonymousIdCookie);
+            _httpContextAccessor.HttpContext.Response.Cookies.Append("ShortUrl-GUID", anonymousUserId.ToString(), anonymousIdCookie);
         }
         
         private async Task CreateAnonymousSessionCookie(Guid anonymousUserId)
@@ -88,7 +88,7 @@ namespace UrlShortner.Services.AuthService
             {
                 ["UserId"] = anonymousUserId.ToString(),
                 ["dateCreated"] = DateTime.Now.ToString(),
-                ["ip"] = _httpContentAccessor.HttpContext.Connection.RemoteIpAddress.ToString(),
+                ["ip"] = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString(),
             };
             
             await _cacheService.Set($"anonymousSessionId-${sessionId}", anonymousUserInfoDict);
@@ -96,7 +96,7 @@ namespace UrlShortner.Services.AuthService
             // Encrypt cookie
             
             
-            _httpContentAccessor.HttpContext.Response.Cookies.Append("ShortUrl-SessionId", sessionId.ToString(), sessionCookie);
+            _httpContextAccessor.HttpContext.Response.Cookies.Append("ShortUrl-SessionId", sessionId.ToString(), sessionCookie);
         }
     }
 }

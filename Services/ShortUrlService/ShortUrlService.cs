@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using System.Web;
@@ -19,18 +20,38 @@ namespace UrlShortner.Services.ShortUrlService
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ShortUrlService(IMapper mapper, DataContext context)
+        public ShortUrlService(IMapper mapper, DataContext context, IHttpContextAccessor httpContextAccessor)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        }
+
+        private Guid GetUserId()
+        {
+            // Check if user is logged in
+            if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                var userId = _httpContextAccessor.HttpContext.User.Claims
+                    .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+                return Guid.Parse(userId.Value);
+            }
+
+            _httpContextAccessor.HttpContext.Request.Cookies.TryGetValue("ShortUrl-GUID", out var idCookie);
+
+            return Guid.Parse(idCookie);
         }
 
         public async Task<ApiResponse> GetAllShortUrls()
         {
             try
             {
-                var shortUrlsResult = await _context.ShortUrls.ToListAsync();
+                var userId = GetUserId();
+                
+                var shortUrlsResult = await _context.ShortUrls.Where(s => s.UserId.Equals(userId)).ToListAsync();
 
                 var shortUrlsResultDto = shortUrlsResult.Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
                 
@@ -46,7 +67,9 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var shortUrlResult = await _context.ShortUrls.Where(s => s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
+                var userId = GetUserId();
+                
+                var shortUrlResult = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
                 
                 var shortUrlResultDto = _mapper.Map<GetShortUrlDto>(shortUrlResult);
 
@@ -62,8 +85,12 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
+                var userId = GetUserId();
+                
                 var newShortUrl = _mapper.Map<ShortUrl>(shortUrl);
 
+                newShortUrl.UserId = userId;
+                
                 if (shortUrl.ExpirationDate == null)
                 {
                     newShortUrl.ExpirationDate = DateTime.Now + TimeSpan.FromDays(7);
@@ -88,7 +115,9 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var shortUrlToUpdate = await _context.ShortUrls.Where(s => s.ShortenedUrl.Equals(shortUrl.ShortenedUrl)).FirstOrDefaultAsync();
+                var userId = GetUserId();
+                
+                var shortUrlToUpdate = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(shortUrl.ShortenedUrl)).FirstOrDefaultAsync();
                 
                 if (shortUrlToUpdate == null)
                 {
@@ -120,7 +149,9 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
+                var userId = GetUserId();
+                
+                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
                 
                 if (shortUrlToDelete == null)
                 {
