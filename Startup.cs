@@ -8,16 +8,20 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using UrlShortner.Data;
+using UrlShortner.Models.Auth;
 using UrlShortner.Services.AuthService;
 using UrlShortner.Services.ShortUrlService;
+using UrlShortner.SessionStores;
 
 namespace UrlShortner
 {
@@ -38,18 +42,46 @@ namespace UrlShortner
             {
                 c.SwaggerDoc("v1", new OpenApiInfo {Title = "UrlShortner", Version = "v1"});
             });
-
-            services.AddHttpContextAccessor();
             
-            services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddAutoMapper(typeof(Startup));
-            
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+
+            services.AddDbContext<DataContext>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<User, Role>(options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = true;
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 0;
+                })
+                .AddEntityFrameworkStores<DataContext>();
+
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+                })
                 .AddCookie(options =>
                 {
-                    options.Cookie.HttpOnly = true;
-                    options.Cookie.Name = "ShortUrlSession";
+                    // options.Cookie.HttpOnly = true;
+                    // options.Cookie.Name = "ShortUrl-SessionId";
+                    // options.SlidingExpiration = true;
+                    // options.ExpireTimeSpan = new TimeSpan(0, 1, 0);
                 });
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.Name = "ShortUrl-SessionId";
+                options.SlidingExpiration = true;
+                options.ExpireTimeSpan = new TimeSpan(0, 1, 0);
+                options.SessionStore = new RedisCacheTicketStore(new RedisCacheOptions()
+                {
+                    Configuration = "localhost:6379"
+                });
+            });
             
             services.AddScoped<IShortUrlService, ShortUrlService>();
             services.AddScoped<IAuthService, AuthService>();

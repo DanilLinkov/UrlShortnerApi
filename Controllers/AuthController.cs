@@ -21,22 +21,19 @@ namespace UrlShortner.Controllers
         [HttpPost("login")]
         public async Task<ApiResponse> Login([FromBody] UserLoginDto userLoginDto)
         {
-            var result = await _authService.Login(userLoginDto.Username, userLoginDto.Password);
-            return result;
+            return await _authService.Login(userLoginDto);
         }
-
+        
         [HttpPost("register")]
         public async Task<ApiResponse> Register([FromBody] UserRegisterDto userRegisterDto)
         {
-            var result = await _authService.Register(new User { Username = userRegisterDto.Username }, userRegisterDto.Password);
-            return result;
+            return await _authService.Register(userRegisterDto);
         }
         
         [HttpPost("logout")]
         public async Task<ApiResponse> Logout()
         {
-            var result = await _authService.Logout();
-            return result;
+            return await _authService.Logout();
         }
         
     }

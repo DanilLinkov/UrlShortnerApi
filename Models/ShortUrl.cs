@@ -1,5 +1,6 @@
 ﻿using System;
 using UrlShortner.Data;
+using UrlShortner.Models.Auth;
 
 namespace UrlShortner.Models
 {
@@ -10,6 +11,6 @@ namespace UrlShortner.Models
         public string ShortenedUrl { get; set; }
         public DateTime CreationDate { get; } = DateTime.Now;
         public DateTime ExpirationDate { get; set; }
-        public User User { get; set; }
+        // public Guid UserId { get; set; }
     }
 }

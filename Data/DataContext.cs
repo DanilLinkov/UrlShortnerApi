@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using UrlShortner.Models;
+using UrlShortner.Models.Auth;
 
 namespace UrlShortner.Data
 {
-    public class DataContext : DbContext
+    public class DataContext : IdentityDbContext<User, Role, Guid>
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
@@ -11,10 +14,11 @@ namespace UrlShortner.Data
         }
 
         public DbSet<ShortUrl> ShortUrls { get; set; }
-        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+            
             // Keys
             
             

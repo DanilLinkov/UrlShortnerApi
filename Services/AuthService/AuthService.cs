@@ -7,115 +7,88 @@ using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.Data;
+using UrlShortner.Dtos.User;
+using UrlShortner.Models.Auth;
 
 namespace UrlShortner.Services.AuthService
 {
     public class AuthService : IAuthService
     {
-        private readonly DataContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<User> _userManager;
 
-        public AuthService(DataContext context, IHttpContextAccessor httpContextAccessor)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
         
-        public async Task<ApiResponse> Login(string username, string password)
+        public async Task<ApiResponse> Login(UserLoginDto user)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username.ToLower().Equals(username.ToLower()));
+            var existingUser = await _userManager.FindByNameAsync(user.Username);
 
-            if (user == null || !VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            if (existingUser == null)
             {
-                return new ApiResponse("User with the provided credentials was not found", StatusCodes.Status404NotFound);
+                return new ApiResponse(StatusCodes.Status404NotFound, "User with the provided credentials was not found");
+            }
+
+            var result =
+                _userManager.PasswordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash,
+                    user.Password);
+            
+            if (result == PasswordVerificationResult.Failed)
+            {
+                return new ApiResponse(StatusCodes.Status401Unauthorized, "User with the provided credentials was not found");
             }
             
-            await SignInUser(user);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString())
+            };
             
-            return new ApiResponse("User successfully logged in", StatusCodes.Status200OK);
+            // var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true
+            };
+
+            await _signInManager.SignInWithClaimsAsync(existingUser, authProperties, claims);
+            
+            return new ApiResponse(StatusCodes.Status200OK, "User successfully logged in");
         }
-        
-        public async Task<ApiResponse> Register(User user, string password)
+
+        public async Task<ApiResponse> Register(UserRegisterDto user)
         {
-            if (await UserExists(user.Username))
+            var newUser = new User() {UserName = user.Username};
+            var result = await _userManager.CreateAsync(newUser, user.Password);
+
+            if (!result.Succeeded)
             {
-                return new ApiResponse("User with the provided username already exists", StatusCodes.Status409Conflict);
+                var dictionary = new Dictionary<string, string>();
+                foreach (IdentityError error in result.Errors)
+                {
+                    dictionary.Add(error.Code, error.Description);
+                }
+                
+                return new ApiResponse("Invalid user data provided",  dictionary, 400);
             }
-
-            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
             
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
-            
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            
-            await SignInUser(user);
-
-            return new ApiResponse((object) user.Id, StatusCodes.Status201Created);
+            return new ApiResponse("User registered successfully",  200);
         }
 
         public async Task<ApiResponse> Logout()
         {
-            await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return new ApiResponse("User successfully logged out", StatusCodes.Status200OK);
+            await _signInManager.SignOutAsync();
+            return new ApiResponse("User successfully logged out",  200);
         }
 
         public async Task<bool> UserExists(string username)
         {
-            if (await _context.Users.AnyAsync(x => x.Username.ToLower() == username.ToLower()))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
-        
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new System.Security.Cryptography.HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                for (int i = 0; i < computedHash.Length; i++)
-                {
-                    if (computedHash[i] != passwordHash[i])
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-
-        private async Task SignInUser(User user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-            };
-            
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            
-            var authProperties = new AuthenticationProperties
-            {
-                AllowRefresh = true,
-                IsPersistent = true,
-            };
-
-            await _httpContextAccessor.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
+            return await _userManager.FindByNameAsync(username) != null;
         }
     }
 }
