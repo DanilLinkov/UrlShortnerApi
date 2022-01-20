@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using AutoWrapper.Wrappers;
+using AutoWrapper.Exceptions;
+using AutoWrapper.Interface;
+using AutoWrapper.Models;
 using Microsoft.AspNetCore.Mvc;
 using UrlShortner.Dtos.ShortUrl;
 using UrlShortner.Models;
@@ -20,33 +22,48 @@ namespace UrlShortner.Controllers
         }
         
         [HttpGet]
-        public async Task<ApiResponse> GetAll()
+        public async Task<IApiResponse> GetAll()
         {
-            return await _shortUrlService.GetAllShortUrls();
+            var shortUrlsResult = await _shortUrlService.GetAllShortUrls();
+            
+            return new ApiResponse(shortUrlsResult);
         }
         
         [HttpGet("{shortUrl}")]
-        public async Task<ApiResponse> Get(string shortUrl)
+        public async Task<IApiResponse> Get(string shortUrl)
         {
-            return await _shortUrlService.GetShortUrl(shortUrl);
+            var shortUrlResult = await _shortUrlService.GetShortUrl(shortUrl);
+
+            if (shortUrlResult == null)
+            {
+                return new ApiResponse("Short url not found", 404);
+            }
+
+            return new ApiResponse(shortUrlResult); 
         }
         
         [HttpPost]
         public async Task<ApiResponse> Create([FromBody] CreateShortUrl shortUrl)
         {
-            return await _shortUrlService.CreateShortUrl(shortUrl);
+            var newShortUrlResult = await _shortUrlService.CreateShortUrl(shortUrl);
+            
+            return new ApiResponse(newShortUrlResult);
         }
         
         [HttpPut]
         public async Task<ApiResponse> Update([FromBody] UpdateShortUrl shortUrl)
         {
-            return await _shortUrlService.UpdateShortUrl(shortUrl);
+            var updatedShortUrlResult = await _shortUrlService.UpdateShortUrl(shortUrl);
+            
+            return new ApiResponse(updatedShortUrlResult);
         }
         
         [HttpDelete("{shortUrl}")]
         public async Task<ApiResponse> Delete(string shortUrl)
         {
-            return await _shortUrlService.DeleteShortUrl(shortUrl);
+            var deletedShortUrlResult = await _shortUrlService.DeleteShortUrl(shortUrl);
+            
+            return new ApiResponse(deletedShortUrlResult);
         }
         
     }

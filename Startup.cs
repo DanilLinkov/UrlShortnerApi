@@ -17,7 +17,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using UrlShortner.AuthUserAccessors;
+using UrlShortner.CookieReaders;
+using UrlShortner.CookieWriters;
 using UrlShortner.Data;
+using UrlShortner.MiddleWares;
 using UrlShortner.Models.Auth;
 using UrlShortner.Services.AuthService;
 using UrlShortner.Services.CacheService;
@@ -88,7 +92,6 @@ namespace UrlShortner
             
             services.AddScoped<IShortUrlService, ShortUrlService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IAnonymousAuthService, AnonymousAuthService>();
             services.AddScoped<ICacheService, CacheService>(o =>
             {
                 var redisCacheOptions = new RedisCacheOptions()
@@ -98,11 +101,28 @@ namespace UrlShortner
                 
                 return new CacheService(new RedisCache(redisCacheOptions));
             });
+            services.AddScoped<IAuthUserAccessor, AuthUserAccessor>();
+            services.AddScoped<ICookieWriter, CookieWriterToResponse>(o =>
+            {
+                var httpContextAccessor = services.BuildServiceProvider().GetRequiredService<IHttpContextAccessor>();
+                
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = DateTime.Now.AddMinutes(1),
+                    Secure = true
+                };
+                
+                return new CookieWriterToResponse(httpContextAccessor,cookieOptions);
+            });
+            services.AddScoped<ICookieReader, CookieReaderToResponse>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var applicationServices = app.ApplicationServices;
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -116,11 +136,14 @@ namespace UrlShortner
 
             app.UseAuthentication();
             app.UseAuthorization();
+            
+            app.UseAddAnonymousCookies();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
-            app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions
+            app.UseAutoWrapper(new AutoWrapperOptions
             {
+                ShowApiVersion = true,
                 // SwaggerPath = "/yourswaggerpath"
             });
         }

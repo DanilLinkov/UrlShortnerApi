@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using AutoWrapper.Wrappers;
+using AutoWrapper.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -26,27 +26,20 @@ namespace UrlShortner.Services.AuthService
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
         }
         
-        public async Task<ApiResponse> Login(UserLoginDto user)
+        public async Task<bool> Login(User user, string password)
         {
-            var existingUser = await _userManager.FindByNameAsync(user.Username);
-
-            if (existingUser == null)
-            {
-                return new ApiResponse(StatusCodes.Status404NotFound, "User with the provided credentials was not found");
-            }
-
             var result =
-                _userManager.PasswordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash,
-                    user.Password);
+                _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash,
+                    password);
             
             if (result == PasswordVerificationResult.Failed)
             {
-                return new ApiResponse(StatusCodes.Status401Unauthorized, "User with the provided credentials was not found");
+                return false;
             }
             
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, existingUser.Id.ToString())
+                new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
             var authProperties = new AuthenticationProperties
@@ -54,34 +47,29 @@ namespace UrlShortner.Services.AuthService
                 IsPersistent = true
             };
 
-            await _signInManager.SignInWithClaimsAsync(existingUser, authProperties, claims);
+            await _signInManager.SignInWithClaimsAsync(user, authProperties, claims);
             
-            return new ApiResponse(StatusCodes.Status200OK, "User successfully logged in");
+            return true;
         }
 
-        public async Task<ApiResponse> Register(UserRegisterDto user)
+        public async Task<IdentityResult> Register(UserRegisterDto user)
         {
             var newUser = new User() {UserName = user.Username};
             var result = await _userManager.CreateAsync(newUser, user.Password);
 
-            if (!result.Succeeded)
-            {
-                var dictionary = new Dictionary<string, string>();
-                foreach (IdentityError error in result.Errors)
-                {
-                    dictionary.Add(error.Code, error.Description);
-                }
-                
-                return new ApiResponse("Invalid user data provided",  dictionary, 400);
-            }
-            
-            return new ApiResponse("User registered successfully",  200);
+            return result;
         }
 
-        public async Task<ApiResponse> Logout()
+        public async Task Logout()
         {
             await _signInManager.SignOutAsync();
-            return new ApiResponse("User successfully logged out",  200);
+        }
+
+        public async Task<User> GetUser(string userName)
+        {
+            var existingUser = await _userManager.FindByNameAsync(userName);
+
+            return existingUser;
         }
     }
 }

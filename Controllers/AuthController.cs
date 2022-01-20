@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoWrapper.Wrappers;
+using AutoWrapper.Interface;
+using AutoWrapper.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using UrlShortner.Data;
 using UrlShortner.Dtos.User;
@@ -12,42 +15,57 @@ namespace UrlShortner.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IAnonymousAuthService _anonymousAuthService;
 
-        public AuthController(IAuthService authService, IAnonymousAuthService anonymousAuthService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
-            _anonymousAuthService = anonymousAuthService ?? throw new ArgumentNullException(nameof(anonymousAuthService));
-        }
-        
-        [HttpPost("anonymousLogin")]
-        public async Task<ApiResponse> AnonymousLogin()
-        {
-            return await _anonymousAuthService.LoginAnonymousUser();
-        }
-        
-        [HttpPost("anonymousLogout")]
-        public async Task<ApiResponse> AnonymousLogout()
-        {
-            return await _anonymousAuthService.LogoutAnonymousUser();
         }
         
         [HttpPost("login")]
-        public async Task<ApiResponse> Login([FromBody] UserLoginDto userLoginDto)
+        public async Task<IApiResponse> Login([FromBody] UserLoginDto userLoginDto)
         {
-            return await _authService.Login(userLoginDto);
+            var user = await _authService.GetUser(userLoginDto.Username);
+
+            if (user == null)
+            {
+                return new ApiResponse("User not found", 404);
+            }
+
+            var isValidLogin = await _authService.Login(user, userLoginDto.Password);
+
+            if (!isValidLogin)
+            {
+                return new ApiResponse("Invalid password", 401);
+            }
+            
+            return new ApiResponse("Login successful", 200);
         }
         
         [HttpPost("register")]
-        public async Task<ApiResponse> Register([FromBody] UserRegisterDto userRegisterDto)
+        public async Task<IApiResponse> Register([FromBody] UserRegisterDto userRegisterDto)
         {
-            return await _authService.Register(userRegisterDto);
+            var registerResult = await _authService.Register(userRegisterDto);
+            
+            if (!registerResult.Succeeded)
+            {
+                var dictionary = new Dictionary<string, string>();
+                foreach (IdentityError error in registerResult.Errors)
+                {
+                    dictionary.Add(error.Code, error.Description);
+                }
+                
+                return new ApiResponse("Invalid user data provided",  dictionary, 400);
+            }
+            
+            return new ApiResponse("User registered successfully",  200);
         }
         
         [HttpPost("logout")]
-        public async Task<ApiResponse> Logout()
+        public async Task<IApiResponse> Logout()
         {
-            return await _authService.Logout();
+            await _authService.Logout();
+            
+            return new ApiResponse("Logout successful", 200);
         }
         
     }

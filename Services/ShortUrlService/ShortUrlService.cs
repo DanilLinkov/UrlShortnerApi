@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Web;
 using AutoMapper;
 using AutoWrapper.Models;
-using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using UrlShortner.Data;
@@ -31,62 +30,46 @@ namespace UrlShortner.Services.ShortUrlService
 
         private Guid GetUserId()
         {
-            // Check if user is logged in
-            if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            {
-                var userId = _httpContextAccessor.HttpContext.User.Claims
-                    .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var userId = _httpContextAccessor.HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-                return Guid.Parse(userId.Value);
-            }
-
-            _httpContextAccessor.HttpContext.Request.Cookies.TryGetValue("ShortUrl-GUID", out var idCookie);
-
-            return Guid.Parse(idCookie);
+            return Guid.Parse(userId.Value);
         }
 
-        public async Task<ApiResponse> GetAllShortUrls()
+        public async Task<List<GetShortUrlDto>> GetAllShortUrls()
+        {
+            var userId = GetUserId();
+                
+            var shortUrlsResults = await _context.ShortUrls.Where(s => s.UserId.Equals(userId)).ToListAsync();
+            var shortUrlsResultDtoList = shortUrlsResults.Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
+                
+            return shortUrlsResultDtoList;
+        }
+
+        public async Task<GetShortUrlDto> GetShortUrl(string shortUrl)
+        {
+            var userId = GetUserId();
+
+            var shortUrlResult = await _context.ShortUrls
+                .Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl)))
+                .FirstOrDefaultAsync();
+            
+            if (shortUrlResult == null)
+            {
+                return null;
+            }
+            
+            var shortUrlResultDto = _mapper.Map<GetShortUrlDto>(shortUrlResult);
+
+            return shortUrlResultDto;
+        }
+
+        public async Task<GetShortUrlDto> CreateShortUrl(CreateShortUrl shortUrl)
         {
             try
             {
                 var userId = GetUserId();
-                
-                var shortUrlsResult = await _context.ShortUrls.Where(s => s.UserId.Equals(userId)).ToListAsync();
 
-                var shortUrlsResultDto = shortUrlsResult.Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
-                
-                return new ApiResponse(shortUrlsResultDto);
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-        }
-
-        public async Task<ApiResponse> GetShortUrl(string shortUrl)
-        {
-            try
-            {
-                var userId = GetUserId();
-                
-                var shortUrlResult = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
-                
-                var shortUrlResultDto = _mapper.Map<GetShortUrlDto>(shortUrlResult);
-
-                return shortUrlResult == null ? new ApiResponse("Provided short url was not found.",StatusCodes.Status404NotFound) : new ApiResponse(shortUrlResultDto);
-            }
-            catch (Exception e)
-            {
-                throw;
-            }
-        }
-
-        public async Task<ApiResponse> CreateShortUrl(CreateShortUrl shortUrl)
-        {
-            try
-            {
-                var userId = GetUserId();
-                
                 var newShortUrl = _mapper.Map<ShortUrl>(shortUrl);
 
                 newShortUrl.UserId = userId;
@@ -103,7 +86,7 @@ namespace UrlShortner.Services.ShortUrlService
 
                 var newShortUrlDto = _mapper.Map<GetShortUrlDto>(newShortUrl);
                 
-                return new ApiResponse(newShortUrlDto);
+                return newShortUrlDto;
             }
             catch (Exception e)
             {
@@ -111,7 +94,7 @@ namespace UrlShortner.Services.ShortUrlService
             }
         }
 
-        public async Task<ApiResponse> UpdateShortUrl(UpdateShortUrl shortUrl)
+        public async Task<GetShortUrlDto> UpdateShortUrl(UpdateShortUrl shortUrl)
         {
             try
             {
@@ -121,7 +104,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 if (shortUrlToUpdate == null)
                 {
-                    return new ApiResponse("Provided short url was not found.", StatusCodes.Status404NotFound);
+                    return null;
                 }
                 
                 shortUrlToUpdate.LongUrl = shortUrl.LongUrl;
@@ -137,7 +120,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 var shortUrlDto = _mapper.Map<GetShortUrlDto>(shortUrlToUpdate);
                 
-                return new ApiResponse(shortUrlDto);
+                return shortUrlDto;
             }
             catch (Exception e)
             {
@@ -145,7 +128,7 @@ namespace UrlShortner.Services.ShortUrlService
             }
         }
 
-        public async Task<ApiResponse> DeleteShortUrl(string shortUrl)
+        public async Task<List<GetShortUrlDto>> DeleteShortUrl(string shortUrl)
         {
             try
             {
@@ -155,7 +138,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 if (shortUrlToDelete == null)
                 {
-                    return new ApiResponse("Provided short url was not found.", StatusCodes.Status404NotFound);
+                    return null;
                 }
                 
                 _context.ShortUrls.Remove(shortUrlToDelete);
@@ -163,7 +146,7 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 var shortUrlDto = (await _context.ShortUrls.ToListAsync()).Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
                 
-                return new ApiResponse(shortUrlDto);
+                return shortUrlDto;
             }
             catch (Exception e)
             {
