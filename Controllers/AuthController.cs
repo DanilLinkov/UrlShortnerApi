@@ -28,17 +28,19 @@ namespace UrlShortner.Controllers
 
             if (user == null)
             {
-                return new ApiResponse("User not found", 404);
+                HttpContext.Response.StatusCode = 404;
+                return new ApiResponse("User not found", null, 404);
             }
 
             var isValidLogin = await _authService.Login(user, userLoginDto.Password);
 
             if (!isValidLogin)
             {
-                return new ApiResponse("Invalid password", 401);
+                HttpContext.Response.StatusCode = 401;
+                return new ApiResponse("Invalid password",null, 401);
             }
             
-            return new ApiResponse("Login successful", 200);
+            return new ApiResponse("Login successful",null, 200);
         }
         
         [HttpPost("register")]
@@ -54,10 +56,11 @@ namespace UrlShortner.Controllers
                     dictionary.Add(error.Code, error.Description);
                 }
                 
+                HttpContext.Response.StatusCode = 400;
                 return new ApiResponse("Invalid user data provided",  dictionary, 400);
             }
             
-            return new ApiResponse("User registered successfully",  200);
+            return new ApiResponse("User registered successfully",null,  200);
         }
         
         [HttpPost("logout")]
@@ -65,7 +68,7 @@ namespace UrlShortner.Controllers
         {
             await _authService.Logout();
             
-            return new ApiResponse("Logout successful", 200);
+            return new ApiResponse("Logout successful",null, 200);
         }
         
     }

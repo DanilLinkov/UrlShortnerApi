@@ -9,6 +9,7 @@ using AutoMapper;
 using AutoWrapper.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using UrlShortner.AuthUserAccessors;
 using UrlShortner.Data;
 using UrlShortner.Dtos.ShortUrl;
 using UrlShortner.Models;
@@ -19,26 +20,18 @@ namespace UrlShortner.Services.ShortUrlService
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IAuthUserAccessor _authUserAccessor;
 
-        public ShortUrlService(IMapper mapper, DataContext context, IHttpContextAccessor httpContextAccessor)
+        public ShortUrlService(IMapper mapper, DataContext context, IAuthUserAccessor authUserAccessor)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-        }
-
-        private Guid GetUserId()
-        {
-            var userId = _httpContextAccessor.HttpContext.User.Claims
-                .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-
-            return Guid.Parse(userId.Value);
+            _authUserAccessor = authUserAccessor ?? throw new ArgumentNullException(nameof(authUserAccessor));
         }
 
         public async Task<List<GetShortUrlDto>> GetAllShortUrls()
         {
-            var userId = GetUserId();
+            var userId = await _authUserAccessor.GetAuthUserId();
                 
             var shortUrlsResults = await _context.ShortUrls.Where(s => s.UserId.Equals(userId)).ToListAsync();
             var shortUrlsResultDtoList = shortUrlsResults.Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
@@ -48,16 +41,18 @@ namespace UrlShortner.Services.ShortUrlService
 
         public async Task<GetShortUrlDto> GetShortUrl(string shortUrl)
         {
-            var userId = GetUserId();
-
             var shortUrlResult = await _context.ShortUrls
-                .Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl)))
+                .Where(s => s.ShortenedUrlId.Equals(shortUrl))
                 .FirstOrDefaultAsync();
             
             if (shortUrlResult == null)
             {
                 return null;
             }
+
+            shortUrlResult.Uses++;
+            
+            await _context.SaveChangesAsync();
             
             var shortUrlResultDto = _mapper.Map<GetShortUrlDto>(shortUrlResult);
 
@@ -68,7 +63,7 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var userId = GetUserId();
+                var userId = await _authUserAccessor.GetAuthUserId();
 
                 var newShortUrl = _mapper.Map<ShortUrl>(shortUrl);
 
@@ -79,7 +74,9 @@ namespace UrlShortner.Services.ShortUrlService
                     newShortUrl.ExpirationDate = DateTime.Now + TimeSpan.FromDays(7);
                 }
                 
-                newShortUrl.ShortenedUrl = $"https://localhost:3000/${Guid.NewGuid().ToString().Substring(0, 6)}";
+                newShortUrl.CreationDate = DateTime.Now;
+
+                newShortUrl.ShortenedUrlId = Guid.NewGuid().ToString().Substring(0, 6);
 
                 await _context.ShortUrls.AddAsync(newShortUrl);
                 await _context.SaveChangesAsync();
@@ -98,9 +95,9 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var userId = GetUserId();
+                var userId = await _authUserAccessor.GetAuthUserId();
                 
-                var shortUrlToUpdate = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(shortUrl.ShortenedUrl)).FirstOrDefaultAsync();
+                var shortUrlToUpdate = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrlId.Equals(shortUrl.ShortenedUrl)).FirstOrDefaultAsync();
                 
                 if (shortUrlToUpdate == null)
                 {
@@ -132,9 +129,9 @@ namespace UrlShortner.Services.ShortUrlService
         {
             try
             {
-                var userId = GetUserId();
+                var userId = await _authUserAccessor.GetAuthUserId();
                 
-                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrl.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
+                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrlId.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
                 
                 if (shortUrlToDelete == null)
                 {

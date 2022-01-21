@@ -73,13 +73,7 @@ namespace UrlShortner
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
                 })
-                .AddCookie(options =>
-                {
-                    // options.Cookie.HttpOnly = true;
-                    // options.Cookie.Name = "ShortUrl-SessionId";
-                    // options.SlidingExpiration = true;
-                    // options.ExpireTimeSpan = new TimeSpan(0, 1, 0);
-                });
+                .AddCookie();
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -109,8 +103,8 @@ namespace UrlShortner
             services.AddScoped<IAuthUserAccessor, AuthUserAccessor>();
             services.AddScoped<ICookieWriter, CookieWriterToResponse>(o =>
             {
-                var httpContextAccessor = services.BuildServiceProvider().GetRequiredService<IHttpContextAccessor>();
-                var encryptor = services.BuildServiceProvider().GetRequiredService<IEncryptor>();
+                var httpContextAccessor = o.GetRequiredService<IHttpContextAccessor>();
+                var encryptor = o.GetRequiredService<IEncryptor>();
                 
                 var cookieOptions = new CookieOptions
                 {
@@ -150,6 +144,7 @@ namespace UrlShortner
             app.UseAutoWrapper(new AutoWrapperOptions
             {
                 ShowApiVersion = true,
+                ShowStatusCode = true,
                 // SwaggerPath = "/yourswaggerpath"
             });
         }

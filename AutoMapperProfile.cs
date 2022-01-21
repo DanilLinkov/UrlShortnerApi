@@ -9,7 +9,8 @@ namespace UrlShortner
     {
         public AutoMapperProfile()
         {
-            CreateMap<ShortUrl, GetShortUrlDto>();
+            CreateMap<ShortUrl, GetShortUrlDto>()
+                .ForMember(dto => dto.ShortenedUrl, opt => opt.MapFrom(o => "http://localhost:5000/api/"+o.ShortenedUrlId));
             CreateMap<CreateShortUrl, ShortUrl>();
         }
     }

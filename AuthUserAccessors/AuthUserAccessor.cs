@@ -15,12 +15,12 @@ namespace UrlShortner.AuthUserAccessors
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
         
-        public Task<string> GetAuthUserId()
+        public Task<Guid> GetAuthUserId()
         {
             var userId = _httpContextAccessor.HttpContext.User.Claims
                 .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 
-            return Task.FromResult(userId.Value);
+            return Task.FromResult(Guid.Parse(userId.Value));
         }
     }
 }

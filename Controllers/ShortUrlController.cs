@@ -11,7 +11,7 @@ using UrlShortner.Services.ShortUrlService;
 namespace UrlShortner.Controllers
 {
     [ApiController]
-    [Route("api/ShortUrl")]
+    [Route("api")]
     public class ShortUrlController : ControllerBase
     {
         private readonly IShortUrlService _shortUrlService;
@@ -36,7 +36,8 @@ namespace UrlShortner.Controllers
 
             if (shortUrlResult == null)
             {
-                return new ApiResponse("Short url not found", 404);
+                HttpContext.Response.StatusCode = 404;
+                return new ApiResponse("Short url not found",null, 404);
             }
 
             return new ApiResponse(shortUrlResult); 

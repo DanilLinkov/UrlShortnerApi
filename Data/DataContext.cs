@@ -24,7 +24,7 @@ namespace UrlShortner.Data
             
             // Columns
             modelBuilder.Entity<ShortUrl>().Property(t => t.LongUrl).IsRequired().HasMaxLength(500);
-            modelBuilder.Entity<ShortUrl>().Property(t => t.ShortenedUrl).IsRequired().HasMaxLength(500);
+            modelBuilder.Entity<ShortUrl>().Property(t => t.ShortenedUrlId).IsRequired().HasMaxLength(500);
 
             // Relationships
 
