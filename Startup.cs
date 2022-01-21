@@ -21,12 +21,15 @@ using UrlShortner.AuthUserAccessors;
 using UrlShortner.CookieReaders;
 using UrlShortner.CookieWriters;
 using UrlShortner.Data;
+using UrlShortner.Decryptors;
+using UrlShortner.Encryptors;
 using UrlShortner.MiddleWares;
 using UrlShortner.Models.Auth;
 using UrlShortner.Services.AuthService;
 using UrlShortner.Services.CacheService;
 using UrlShortner.Services.ShortUrlService;
 using UrlShortner.SessionStores;
+using UrlShortner.Util;
 
 namespace UrlShortner
 {
@@ -81,22 +84,24 @@ namespace UrlShortner
             services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
-                options.Cookie.Name = "ShortUrl-SessionId";
+                options.Cookie.Name = CookieNames.ShortUrlSession;
                 options.SlidingExpiration = true;
                 options.ExpireTimeSpan = new TimeSpan(0, 1, 0);
                 options.SessionStore = new RedisCacheTicketStore(new RedisCacheOptions()
                 {
-                    Configuration = "localhost:6379"
+                    Configuration = Configuration.GetConnectionString("RedisConnection"),
                 });
             });
-            
+
+            services.AddScoped<IEncryptor, Encryptor>(o => new Encryptor(Configuration["CookieSecret"]));
+            services.AddScoped<IDecryptor, Decryptor>(o => new Decryptor(Configuration["CookieSecret"]));
             services.AddScoped<IShortUrlService, ShortUrlService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICacheService, CacheService>(o =>
             {
                 var redisCacheOptions = new RedisCacheOptions()
                 {
-                    Configuration = "localhost:6379"
+                    Configuration = Configuration.GetConnectionString("RedisConnection"),
                 };
                 
                 return new CacheService(new RedisCache(redisCacheOptions));
@@ -105,6 +110,7 @@ namespace UrlShortner
             services.AddScoped<ICookieWriter, CookieWriterToResponse>(o =>
             {
                 var httpContextAccessor = services.BuildServiceProvider().GetRequiredService<IHttpContextAccessor>();
+                var encryptor = services.BuildServiceProvider().GetRequiredService<IEncryptor>();
                 
                 var cookieOptions = new CookieOptions
                 {
@@ -113,7 +119,7 @@ namespace UrlShortner
                     Secure = true
                 };
                 
-                return new CookieWriterToResponse(httpContextAccessor,cookieOptions);
+                return new CookieWriterToResponse(httpContextAccessor,cookieOptions,encryptor);
             });
             services.AddScoped<ICookieReader, CookieReaderToResponse>();
         }

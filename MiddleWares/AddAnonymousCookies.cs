@@ -9,6 +9,7 @@ using Microsoft.Net.Http.Headers;
 using UrlShortner.CookieReaders;
 using UrlShortner.CookieWriters;
 using UrlShortner.Services.CacheService;
+using UrlShortner.Util;
 
 namespace UrlShortner.MiddleWares
 {
@@ -25,7 +26,7 @@ namespace UrlShortner.MiddleWares
         {
             if (!context.User.Identity.IsAuthenticated)
             {
-                var anonymousUserId = await cookieReader.ReadCookie("ShortUrl-GUID");
+                var anonymousUserId = await cookieReader.ReadCookie(CookieNames.ShortUrlId);
 
                 var newUserId = false;
                 if (string.IsNullOrEmpty(anonymousUserId))
@@ -33,7 +34,7 @@ namespace UrlShortner.MiddleWares
                     newUserId = true;
                     
                     anonymousUserId = Guid.NewGuid().ToString();
-                    await cookieWriter.WriteCookie("ShortUrl-GUID", anonymousUserId);
+                    await cookieWriter.WriteCookie(CookieNames.ShortUrlId, anonymousUserId);
                 }
                 
                 var claims = new List<Claim>
@@ -44,7 +45,7 @@ namespace UrlShortner.MiddleWares
                     
                 context.User.AddIdentity(identity);
 
-                var sessionId = await cookieReader.ReadCookie("ShortUrl-SessionId");
+                var sessionId = await cookieReader.ReadCookie(CookieNames.ShortUrlSession);
 
                 if (string.IsNullOrEmpty(sessionId) || newUserId)
                 {
@@ -57,7 +58,7 @@ namespace UrlShortner.MiddleWares
                     };
                 
                     await cacheService.Set($"anonymousSessionId-${sessionId}", anonymousUserInfoDict);
-                    await cookieWriter.WriteCookie("ShortUrl-SessionId", sessionId);
+                    await cookieWriter.WriteCookie(CookieNames.ShortUrlSession, sessionId);
                 }
             }
             
