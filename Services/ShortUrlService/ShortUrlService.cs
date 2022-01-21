@@ -75,7 +75,6 @@ namespace UrlShortner.Services.ShortUrlService
                 }
                 
                 newShortUrl.CreationDate = DateTime.Now;
-
                 newShortUrl.ShortenedUrlId = Guid.NewGuid().ToString().Substring(0, 6);
 
                 await _context.ShortUrls.AddAsync(newShortUrl);
