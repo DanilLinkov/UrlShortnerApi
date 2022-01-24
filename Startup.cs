@@ -23,6 +23,7 @@ using UrlShortner.CookieWriters;
 using UrlShortner.Data;
 using UrlShortner.Decryptors;
 using UrlShortner.Encryptors;
+using UrlShortner.KeyGenerators;
 using UrlShortner.MiddleWares;
 using UrlShortner.Models.Auth;
 using UrlShortner.Services.AuthService;
@@ -86,6 +87,8 @@ namespace UrlShortner
                     Configuration = Configuration.GetConnectionString("RedisConnection"),
                 });
             });
+
+            services.AddScoped<IKeyGenerator, KeyGenerator>();
 
             services.AddScoped<IEncryptor, Encryptor>(o => new Encryptor(Configuration["CookieSecret"]));
             services.AddScoped<IDecryptor, Decryptor>(o => new Decryptor(Configuration["CookieSecret"]));

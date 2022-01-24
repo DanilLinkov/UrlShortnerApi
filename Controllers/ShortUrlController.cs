@@ -47,7 +47,13 @@ namespace UrlShortner.Controllers
         public async Task<ApiResponse> Create([FromBody] CreateShortUrl shortUrl)
         {
             var newShortUrlResult = await _shortUrlService.CreateShortUrl(shortUrl);
-            
+
+            if (newShortUrlResult == null)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResponse("Key generation service is down", null, 400);
+            }
+
             return new ApiResponse(newShortUrlResult);
         }
         

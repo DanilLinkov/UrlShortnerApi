@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using UrlShortner.AuthUserAccessors;
 using UrlShortner.Data;
 using UrlShortner.Dtos.ShortUrl;
+using UrlShortner.KeyGenerators;
 using UrlShortner.Models;
 
 namespace UrlShortner.Services.ShortUrlService
@@ -21,12 +22,14 @@ namespace UrlShortner.Services.ShortUrlService
         private readonly IMapper _mapper;
         private readonly DataContext _context;
         private readonly IAuthUserAccessor _authUserAccessor;
+        private readonly IKeyGenerator _keyGenerator;
 
-        public ShortUrlService(IMapper mapper, DataContext context, IAuthUserAccessor authUserAccessor)
+        public ShortUrlService(IMapper mapper, DataContext context, IAuthUserAccessor authUserAccessor, IKeyGenerator keyGenerator)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _authUserAccessor = authUserAccessor ?? throw new ArgumentNullException(nameof(authUserAccessor));
+            _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
         }
 
         public async Task<List<GetShortUrlDto>> GetAllShortUrls()
@@ -75,7 +78,15 @@ namespace UrlShortner.Services.ShortUrlService
                 }
                 
                 newShortUrl.CreationDate = DateTime.Now;
-                newShortUrl.ShortenedUrlId = Guid.NewGuid().ToString().Substring(0, 6);
+                
+                var newKey = await _keyGenerator.GenerateKey(8);
+                
+                if (newKey == null)
+                {
+                    return null;
+                }
+
+                newShortUrl.ShortenedUrlId = newKey;
 
                 await _context.ShortUrls.AddAsync(newShortUrl);
                 await _context.SaveChangesAsync();
