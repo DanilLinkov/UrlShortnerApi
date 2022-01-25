@@ -74,7 +74,10 @@ namespace UrlShortner
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
                 })
-                .AddCookie();
+                .AddCookie(o =>
+                {
+                    o.Cookie.SameSite = SameSiteMode.None;
+                });
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -86,6 +89,7 @@ namespace UrlShortner
                 {
                     Configuration = Configuration.GetConnectionString("RedisConnection"),
                 });
+                options.Cookie.SameSite = SameSiteMode.None;
             });
 
             services.AddScoped<IKeyGenerator, KeyGenerator>();
@@ -113,12 +117,22 @@ namespace UrlShortner
                 {
                     HttpOnly = true,
                     Expires = DateTime.Now.AddMinutes(1),
-                    Secure = true
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
                 };
                 
                 return new CookieWriterToResponse(httpContextAccessor,cookieOptions,encryptor);
             });
             services.AddScoped<ICookieReader, CookieReaderToResponse>();
+            
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: "FrontEnd",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                    });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -136,6 +150,8 @@ namespace UrlShortner
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            
+            app.UseCors("FrontEnd");
 
             app.UseAuthentication();
             app.UseAuthorization();

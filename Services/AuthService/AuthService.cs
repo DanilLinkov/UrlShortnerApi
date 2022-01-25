@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -18,15 +19,17 @@ namespace UrlShortner.Services.AuthService
     public class AuthService : IAuthService
     {
         private readonly SignInManager<User> _signInManager;
+        private readonly IHttpContextAccessor _contextAccessor;
         private readonly UserManager<User> _userManager;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, IHttpContextAccessor contextAccessor)
         {
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
             _signInManager = signInManager ?? throw new ArgumentNullException(nameof(signInManager));
+            _contextAccessor = contextAccessor ?? throw new ArgumentNullException(nameof(contextAccessor));
         }
         
-        public async Task<bool> Login(User user, string password)
+        public async Task<GetUserDto> Login(User user, string password)
         {
             var result =
                 _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash,
@@ -34,12 +37,13 @@ namespace UrlShortner.Services.AuthService
             
             if (result == PasswordVerificationResult.Failed)
             {
-                return false;
+                return null;
             }
             
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString())
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Name, user.UserName)
             };
 
             var authProperties = new AuthenticationProperties
@@ -49,7 +53,10 @@ namespace UrlShortner.Services.AuthService
 
             await _signInManager.SignInWithClaimsAsync(user, authProperties, claims);
             
-            return true;
+            return new GetUserDto()
+            {
+                UserName = user.UserName,
+            };
         }
 
         public async Task<IdentityResult> Register(UserRegisterDto user)
@@ -58,6 +65,19 @@ namespace UrlShortner.Services.AuthService
             var result = await _userManager.CreateAsync(newUser, user.Password);
 
             return result;
+        }
+
+        public Task<GetUserDto> ValidateSession()
+        {
+            if (_contextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            {
+                return Task.FromResult(new GetUserDto()
+                {
+                    UserName = _contextAccessor.HttpContext.User.Claims.Where(c => c.Type == ClaimTypes.Name).FirstOrDefault().Value,
+                });
+            }
+
+            return null;
         }
 
         public async Task Logout()

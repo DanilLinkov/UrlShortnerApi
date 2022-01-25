@@ -12,6 +12,6 @@ namespace UrlShortner.Services.ShortUrlService
         Task<GetShortUrlDto> GetShortUrl(string shortUrl);
         Task<GetShortUrlDto> CreateShortUrl(CreateShortUrl shortUrl);
         Task<GetShortUrlDto> UpdateShortUrl(UpdateShortUrl shortUrl); //UpdateShortUrl
-        Task<List<GetShortUrlDto>> DeleteShortUrl(string shortUrl); //List<GetShortUrlDto>
+        Task<List<GetShortUrlDto>> DeleteShortUrl(DeleteShortUrlDto shortUrl); //List<GetShortUrlDto>
     }
 }

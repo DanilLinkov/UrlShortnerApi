@@ -65,8 +65,8 @@ namespace UrlShortner.Controllers
             return new ApiResponse(updatedShortUrlResult);
         }
         
-        [HttpDelete("{shortUrl}")]
-        public async Task<ApiResponse> Delete(string shortUrl)
+        [HttpDelete]
+        public async Task<ApiResponse> Delete([FromBody] DeleteShortUrlDto shortUrl)
         {
             var deletedShortUrlResult = await _shortUrlService.DeleteShortUrl(shortUrl);
             

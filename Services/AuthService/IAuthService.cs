@@ -8,8 +8,9 @@ namespace UrlShortner.Services.AuthService
 {
     public interface IAuthService
     {
-        Task<bool> Login(User user, string password);
+        Task<GetUserDto> Login(User user, string password);
         Task<IdentityResult> Register(UserRegisterDto user);
+        Task<GetUserDto> ValidateSession();
         Task Logout();
         Task<User> GetUser(string userName);
     }

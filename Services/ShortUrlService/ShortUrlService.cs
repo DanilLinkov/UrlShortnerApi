@@ -135,13 +135,15 @@ namespace UrlShortner.Services.ShortUrlService
             }
         }
 
-        public async Task<List<GetShortUrlDto>> DeleteShortUrl(string shortUrl)
+        public async Task<List<GetShortUrlDto>> DeleteShortUrl(DeleteShortUrlDto inputDto)
         {
             try
             {
                 var userId = await _authUserAccessor.GetAuthUserId();
+
+                var shortUrl = _mapper.Map<DeleteShortUrlDto>(inputDto);
                 
-                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrlId.Equals(HttpUtility.UrlDecode(shortUrl))).FirstOrDefaultAsync();
+                var shortUrlToDelete = await _context.ShortUrls.Where(s => s.UserId.Equals(userId) && s.ShortenedUrlId.Equals(HttpUtility.UrlDecode(shortUrl.ShortenedUrl))).FirstOrDefaultAsync();
                 
                 if (shortUrlToDelete == null)
                 {
@@ -151,9 +153,10 @@ namespace UrlShortner.Services.ShortUrlService
                 _context.ShortUrls.Remove(shortUrlToDelete);
                 await _context.SaveChangesAsync();
                 
-                var shortUrlDto = (await _context.ShortUrls.ToListAsync()).Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
+                var shortUrlsResults = await _context.ShortUrls.Where(s => s.UserId.Equals(userId)).ToListAsync();
+                var shortUrlsResultDtoList = shortUrlsResults.Select(s => _mapper.Map<GetShortUrlDto>(s)).ToList();
                 
-                return shortUrlDto;
+                return shortUrlsResultDtoList;
             }
             catch (Exception e)
             {
