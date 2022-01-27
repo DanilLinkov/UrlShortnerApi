@@ -26,10 +26,10 @@ using UrlShortner.Encryptors;
 using UrlShortner.KeyGenerators;
 using UrlShortner.MiddleWares;
 using UrlShortner.Models.Auth;
+using UrlShortner.RedisCacheTicketStores;
 using UrlShortner.Services.AuthService;
 using UrlShortner.Services.CacheService;
 using UrlShortner.Services.ShortUrlService;
-using UrlShortner.SessionStores;
 using UrlShortner.Util;
 
 namespace UrlShortner
@@ -84,7 +84,7 @@ namespace UrlShortner
                 options.Cookie.HttpOnly = true;
                 options.Cookie.Name = CookieNames.ShortUrlSession;
                 options.SlidingExpiration = true;
-                options.ExpireTimeSpan = new TimeSpan(0, 1, 0);
+                options.ExpireTimeSpan = new TimeSpan(0, 30, 0);
                 options.SessionStore = new RedisCacheTicketStore(new RedisCacheOptions()
                 {
                     Configuration = Configuration.GetConnectionString("RedisConnection"),
@@ -116,7 +116,7 @@ namespace UrlShortner
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = DateTime.Now.AddMinutes(1),
+                    Expires = DateTime.Now.AddMinutes(30),
                     Secure = true,
                     SameSite = SameSiteMode.None,
                 };

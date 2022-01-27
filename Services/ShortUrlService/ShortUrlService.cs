@@ -74,19 +74,31 @@ namespace UrlShortner.Services.ShortUrlService
                 
                 if (shortUrl.ExpirationDate == null)
                 {
-                    newShortUrl.ExpirationDate = DateTime.Now + TimeSpan.FromDays(7);
+                    newShortUrl.ExpirationDate = DateTime.Now + TimeSpan.FromDays(30);
                 }
                 
                 newShortUrl.CreationDate = DateTime.Now;
-                
-                var newKey = await _keyGenerator.GenerateKey(8);
-                
-                if (newKey == null)
-                {
-                    return null;
-                }
 
-                newShortUrl.ShortenedUrlId = newKey;
+                if (shortUrl.CustomId != null && shortUrl.CustomId.Trim().Length > 0)
+                {
+                    if (await _context.ShortUrls.AnyAsync(s => s.ShortenedUrlId.Equals(shortUrl.CustomId)))
+                    {
+                        throw new Exception("Custom Id already exists");
+                    }
+                    
+                    newShortUrl.ShortenedUrlId = shortUrl.CustomId;
+                }
+                else
+                {
+                    var newKey = await _keyGenerator.GenerateKey(8);
+                
+                    if (newKey == null)
+                    {
+                        return null;
+                    }
+
+                    newShortUrl.ShortenedUrlId = newKey;   
+                }
 
                 await _context.ShortUrls.AddAsync(newShortUrl);
                 await _context.SaveChangesAsync();

@@ -46,7 +46,17 @@ namespace UrlShortner.Controllers
         [HttpPost]
         public async Task<ApiResponse> Create([FromBody] CreateShortUrl shortUrl)
         {
-            var newShortUrlResult = await _shortUrlService.CreateShortUrl(shortUrl);
+            GetShortUrlDto newShortUrlResult = null;
+            
+            try
+            {
+                newShortUrlResult = await _shortUrlService.CreateShortUrl(shortUrl);
+            }
+            catch (Exception e)
+            {
+                HttpContext.Response.StatusCode = 400;
+                return new ApiResponse("Custom Id already exists", null, 400);
+            }
 
             if (newShortUrlResult == null)
             {

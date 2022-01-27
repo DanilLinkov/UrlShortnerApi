@@ -31,7 +31,7 @@ namespace UrlShortner.Services.CacheService
             var options = new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1),
-                SlidingExpiration = TimeSpan.FromMinutes(10)
+                SlidingExpiration = TimeSpan.FromMinutes(30)
             };
 
             await _cache.SetStringAsync(key, JsonConvert.SerializeObject(value), options);

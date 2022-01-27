@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Redis;
 
-namespace UrlShortner.SessionStores
+namespace UrlShortner.RedisCacheTicketStores
 {
     public class RedisCacheTicketStore : ITicketStore
     {
