@@ -74,10 +74,7 @@ namespace UrlShortner
                     options.DefaultScheme = IdentityConstants.ApplicationScheme;
                     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
                 })
-                .AddCookie(o =>
-                {
-                    o.Cookie.SameSite = SameSiteMode.None;
-                });
+                .AddCookie();
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -90,6 +87,8 @@ namespace UrlShortner
                     Configuration = Configuration.GetConnectionString("RedisConnection"),
                 });
                 options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.Path = "/";
             });
 
             services.AddScoped<IKeyGenerator, KeyGenerator>();
@@ -119,6 +118,7 @@ namespace UrlShortner
                     Expires = DateTime.Now.AddMinutes(30),
                     Secure = true,
                     SameSite = SameSiteMode.None,
+                    Path = "/",
                 };
                 
                 return new CookieWriterToResponse(httpContextAccessor,cookieOptions,encryptor);

@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using UrlShortner.Data;
 using UrlShortner.Dtos.User;
 using UrlShortner.Models.Auth;
+using UrlShortner.Util;
 
 namespace UrlShortner.Services.AuthService
 {
