@@ -2,6 +2,6 @@
 {
     public class DeleteShortUrlDto
     {
-        public string ShortenedUrl { get; set; }
+        public string ShortenedUrlId { get; set; }
     }
 }

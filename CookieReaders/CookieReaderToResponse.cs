@@ -22,7 +22,14 @@ namespace UrlShortner.CookieReaders
             
             if (!string.IsNullOrEmpty(cookieValue))
             {
-                return await _decryptor.Decrypt(cookieValue);
+                try
+                {
+                    return await _decryptor.Decrypt(cookieValue);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
 
             return cookieValue;

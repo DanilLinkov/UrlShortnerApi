@@ -34,7 +34,7 @@ namespace UrlShortner.MiddleWares
                     newUserId = true;
                     
                     anonymousUserId = Guid.NewGuid().ToString();
-                    await cookieWriter.WriteCookie(CookieNames.ShortUrlId, anonymousUserId);
+                    await cookieWriter.WriteCookie(CookieNames.ShortUrlId, anonymousUserId, DateTime.Now.AddYears(5));
                 }
                 
                 var claims = new List<Claim>

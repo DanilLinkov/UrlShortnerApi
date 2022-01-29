@@ -55,7 +55,7 @@ namespace UrlShortner.Controllers
             catch (Exception e)
             {
                 HttpContext.Response.StatusCode = 400;
-                return new ApiResponse("Custom Id already exists", null, 400);
+                return new ApiResponse(e.Message, null, 400);
             }
 
             if (newShortUrlResult == null)

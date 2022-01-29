@@ -23,5 +23,21 @@ namespace UrlShortner.CookieWriters
             var encryptedCookieValue = await _encryptor.Encrypt(cookieValue);
             _httpContextAccessor.HttpContext.Response.Cookies.Append(cookieName, encryptedCookieValue, _cookieOptions);
         }
+
+        public async Task WriteCookie(string cookieName, string cookieValue, DateTime expiration)
+        {
+            var encryptedCookieValue = await _encryptor.Encrypt(cookieValue);
+
+            var newCookieOptions = new CookieOptions()
+            {
+                HttpOnly = _cookieOptions.HttpOnly,
+                Expires = expiration,
+                Secure = _cookieOptions.Secure,
+                SameSite = _cookieOptions.SameSite,
+                Path = _cookieOptions.Path,
+            };
+
+            _httpContextAccessor.HttpContext.Response.Cookies.Append(cookieName, encryptedCookieValue, newCookieOptions);
+        }
     }
 }
