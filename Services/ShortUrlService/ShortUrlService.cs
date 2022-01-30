@@ -147,10 +147,15 @@ namespace UrlShortner.Services.ShortUrlService
 
             shortUrlToUpdate.LongUrl = shortUrl.LongUrl;
             shortUrlToUpdate.ExpirationDate = shortUrl.ExpirationDate;
-
-            if (shortUrlToUpdate.ExpirationDate > DateTime.Now + TimeSpan.FromDays(30))
+            
+            if (shortUrl.ExpirationDate == null || shortUrl.ExpirationDate < DateTime.Now.AddDays(1))
             {
-                shortUrlToUpdate.ExpirationDate = DateTime.Now + TimeSpan.FromDays(30);
+                shortUrlToUpdate.ExpirationDate = DateTime.Now + TimeSpan.FromDays(1);
+            }
+
+            if (shortUrl.ExpirationDate > DateTime.Now.AddDays(30))
+            {
+                throw new Exception("Expiration date cannot be more than 30 days from now");
             }
 
             _context.ShortUrls.Update(shortUrlToUpdate);
