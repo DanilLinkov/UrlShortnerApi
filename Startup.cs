@@ -101,7 +101,7 @@ namespace UrlShortner
 
             services.AddScoped<IKeyGenerator, KeyGenerator>(o =>
             {
-                var clientUrl = Configuration.GetSection("HostUrl").Value;
+                var clientUrl = Configuration.GetSection("ApiUrl").Value;
                 var apiKey = Configuration.GetSection("ApiKey").Value;
                 
                 return new KeyGenerator(clientUrl, apiKey);
@@ -116,9 +116,9 @@ namespace UrlShortner
                 var keyGenerator = o.GetRequiredService<IKeyGenerator>();
                 var authUserAccessor = o.GetRequiredService<IAuthUserAccessor>();
                 var cacheService = o.GetRequiredService<ICacheService>();
-                var hostUrl = Configuration.GetSection("HostUrl").Value;
+                var clientUrl = Configuration.GetSection("ClientUrl").Value;
                 
-                return new ShortUrlService(mapper, context, authUserAccessor, keyGenerator, cacheService, hostUrl);
+                return new ShortUrlService(mapper, context, authUserAccessor, keyGenerator, cacheService, clientUrl);
             });
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICacheService, CacheService>(o =>
@@ -154,7 +154,7 @@ namespace UrlShortner
                 options.AddPolicy(name: "FrontEnd",
                     builder =>
                     {
-                        builder.WithOrigins(Configuration.GetSection("HostUrl").Value).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                        builder.WithOrigins(Configuration.GetSection("ClientUrl").Value).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                     });
             });
         }

@@ -25,17 +25,17 @@ namespace UrlShortner.Services.ShortUrlService
         private readonly IAuthUserAccessor _authUserAccessor;
         private readonly IKeyGenerator _keyGenerator;
         private readonly ICacheService _cacheService;
-        private readonly string _hostUrl;
+        private readonly string _clientUrl;
 
         public ShortUrlService(IMapper mapper, DataContext context, IAuthUserAccessor authUserAccessor,
-            IKeyGenerator keyGenerator, ICacheService cacheService, string hostUrl)
+            IKeyGenerator keyGenerator, ICacheService cacheService, string clientUrl)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _authUserAccessor = authUserAccessor ?? throw new ArgumentNullException(nameof(authUserAccessor));
             _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-            _hostUrl = hostUrl ?? throw new ArgumentNullException(nameof(hostUrl));
+            _clientUrl = clientUrl ?? throw new ArgumentNullException(nameof(clientUrl));
         }
 
         public async Task<List<GetShortUrlDto>> GetAllShortUrls()
@@ -206,7 +206,7 @@ namespace UrlShortner.Services.ShortUrlService
         private bool IsValidUrl(string url)
         {
             var isValidUrl =
-                !url.Contains(_hostUrl) && Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
+                !url.Contains(_clientUrl) && Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
                                         && (uriResult.Scheme == Uri.UriSchemeHttp ||
                                             uriResult.Scheme == Uri.UriSchemeHttps) && url.Contains(".");
             return isValidUrl;
