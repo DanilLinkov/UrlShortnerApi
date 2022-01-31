@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using AutoWrapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -31,14 +32,21 @@ using UrlShortner.Services.AuthService;
 using UrlShortner.Services.CacheService;
 using UrlShortner.Services.ShortUrlService;
 using UrlShortner.Util;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace UrlShortner
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
+            
+            Configuration = builder.Build();
         }
 
         public IConfiguration Configuration { get; }
@@ -91,11 +99,27 @@ namespace UrlShortner
                 options.Cookie.Path = "/";
             });
 
-            services.AddScoped<IKeyGenerator, KeyGenerator>();
+            services.AddScoped<IKeyGenerator, KeyGenerator>(o =>
+            {
+                var clientUrl = Configuration.GetSection("HostUrl").Value;
+                var apiKey = Configuration.GetSection("ApiKey").Value;
+                
+                return new KeyGenerator(clientUrl, apiKey);
+            });
 
-            services.AddScoped<IEncryptor, Encryptor>(o => new Encryptor(Configuration["CookieSecret"]));
-            services.AddScoped<IDecryptor, Decryptor>(o => new Decryptor(Configuration["CookieSecret"]));
-            services.AddScoped<IShortUrlService, ShortUrlService>();
+            services.AddScoped<IEncryptor, Encryptor>(o => new Encryptor(Configuration.GetSection("CookieSecret").Value));
+            services.AddScoped<IDecryptor, Decryptor>(o => new Decryptor(Configuration.GetSection("CookieSecret").Value));
+            services.AddScoped<IShortUrlService, ShortUrlService>(o =>
+            {
+                var mapper = o.GetRequiredService<IMapper>();
+                var context = o.GetRequiredService<DataContext>();
+                var keyGenerator = o.GetRequiredService<IKeyGenerator>();
+                var authUserAccessor = o.GetRequiredService<IAuthUserAccessor>();
+                var cacheService = o.GetRequiredService<ICacheService>();
+                var hostUrl = Configuration.GetSection("HostUrl").Value;
+                
+                return new ShortUrlService(mapper, context, authUserAccessor, keyGenerator, cacheService, hostUrl);
+            });
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICacheService, CacheService>(o =>
             {
@@ -130,7 +154,7 @@ namespace UrlShortner
                 options.AddPolicy(name: "FrontEnd",
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                        builder.WithOrigins(Configuration.GetSection("HostUrl").Value).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                     });
             });
         }
@@ -164,7 +188,6 @@ namespace UrlShortner
             {
                 ShowApiVersion = true,
                 ShowStatusCode = true,
-                // SwaggerPath = "/yourswaggerpath"
             });
         }
     }

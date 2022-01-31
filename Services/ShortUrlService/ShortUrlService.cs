@@ -14,6 +14,7 @@ using UrlShortner.Data;
 using UrlShortner.Dtos.ShortUrl;
 using UrlShortner.KeyGenerators;
 using UrlShortner.Models;
+using UrlShortner.Services.CacheService;
 
 namespace UrlShortner.Services.ShortUrlService
 {
@@ -23,14 +24,18 @@ namespace UrlShortner.Services.ShortUrlService
         private readonly DataContext _context;
         private readonly IAuthUserAccessor _authUserAccessor;
         private readonly IKeyGenerator _keyGenerator;
+        private readonly ICacheService _cacheService;
+        private readonly string _hostUrl;
 
         public ShortUrlService(IMapper mapper, DataContext context, IAuthUserAccessor authUserAccessor,
-            IKeyGenerator keyGenerator)
+            IKeyGenerator keyGenerator, ICacheService cacheService, string hostUrl)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _authUserAccessor = authUserAccessor ?? throw new ArgumentNullException(nameof(authUserAccessor));
             _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
+            _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+            _hostUrl = hostUrl ?? throw new ArgumentNullException(nameof(hostUrl));
         }
 
         public async Task<List<GetShortUrlDto>> GetAllShortUrls()
@@ -46,15 +51,22 @@ namespace UrlShortner.Services.ShortUrlService
 
         public async Task<GetShortUrlDto> GetShortUrl(string shortUrl)
         {
-            var shortUrlResult = await _context.ShortUrls
-                .Where(s => s.ShortenedUrlId.Equals(shortUrl) && s.ExpirationDate > DateTime.Now)
-                .FirstOrDefaultAsync();
+            var shortUrlResult = await _cacheService.Get<ShortUrl>("ShortUrl-"+shortUrl);
 
             if (shortUrlResult == null)
             {
-                return null;
-            }
+                shortUrlResult = await _context.ShortUrls
+                    .Where(s => s.ShortenedUrlId.Equals(shortUrl) && s.ExpirationDate > DateTime.Now)
+                    .FirstOrDefaultAsync();
 
+                if (shortUrlResult == null)
+                {
+                    return null;
+                }
+
+                await _cacheService.Set("ShortUrl-"+shortUrlResult.ShortenedUrlId, shortUrlResult);
+            }
+            
             shortUrlResult.Uses++;
 
             await _context.SaveChangesAsync();
@@ -148,7 +160,7 @@ namespace UrlShortner.Services.ShortUrlService
             shortUrlToUpdate.LongUrl = shortUrl.LongUrl;
             shortUrlToUpdate.ExpirationDate = shortUrl.ExpirationDate;
             
-            if (shortUrl.ExpirationDate == null || shortUrl.ExpirationDate < DateTime.Now.AddDays(1))
+            if (shortUrl.ExpirationDate < DateTime.Now.AddDays(1))
             {
                 shortUrlToUpdate.ExpirationDate = DateTime.Now + TimeSpan.FromDays(1);
             }
@@ -191,12 +203,12 @@ namespace UrlShortner.Services.ShortUrlService
             return shortUrlsResultDtoList;
         }
 
-        private static bool IsValidUrl(string url)
+        private bool IsValidUrl(string url)
         {
             var isValidUrl =
-                !url.Contains("localhost:3000") && Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
-                                                && (uriResult.Scheme == Uri.UriSchemeHttp ||
-                                                    uriResult.Scheme == Uri.UriSchemeHttps) && url.Contains(".");
+                !url.Contains(_hostUrl) && Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
+                                        && (uriResult.Scheme == Uri.UriSchemeHttp ||
+                                            uriResult.Scheme == Uri.UriSchemeHttps) && url.Contains(".");
             return isValidUrl;
         }
     }

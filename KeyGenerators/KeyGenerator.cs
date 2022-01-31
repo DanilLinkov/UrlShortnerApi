@@ -24,19 +24,22 @@ namespace UrlShortner.KeyGenerators
     
     public class KeyGenerator: IKeyGenerator
     {
+        private readonly string _clientUrl;
+        private readonly string _apiKey;
 
-        public KeyGenerator()
+        public KeyGenerator(string clientUrl, string apiKey)
         {
-            
+            _clientUrl = clientUrl ?? throw new ArgumentNullException(nameof(clientUrl));
+            _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         }
         
         public async Task<string> GenerateKey(int size)
         {
             var client = new HttpClient();
 
-            client.DefaultRequestHeaders.Add("API-KEY", "test");
+            client.DefaultRequestHeaders.Add("API-KEY", _apiKey);
             
-            var response = await client.GetAsync($"http://localhost:5000/api/key?size=${size}");
+            var response = await client.GetAsync($"{_clientUrl}/api/key?size=${size}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -52,9 +55,9 @@ namespace UrlShortner.KeyGenerators
         {
             var client = new HttpClient();
 
-            client.DefaultRequestHeaders.Add("API-KEY", "test");
+            client.DefaultRequestHeaders.Add("API-KEY", _apiKey);
             
-            var response = await client.GetAsync($"http://localhost:5000/api/keys/${count}?size={size}");
+            var response = await client.GetAsync($"{_clientUrl}/api/keys/${count}?size={size}");
 
             if (response.IsSuccessStatusCode)
             {

@@ -52,7 +52,7 @@ namespace UrlShortner.Controllers
                 
                 return new ApiResponse("Logged in", loginUser, 200);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 HttpContext.Response.StatusCode = 401;
                 return new ApiResponse("Not logged in", null, 401);
