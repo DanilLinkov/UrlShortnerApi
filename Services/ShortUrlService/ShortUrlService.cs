@@ -93,9 +93,9 @@ namespace UrlShortner.Services.ShortUrlService
 
             if (shortUrl.CustomId != null)
             {
-                if (shortUrl.CustomId.Trim().Length < 4)
+                if (shortUrl.CustomId.Trim().Length is < 4 or > 12)
                 {
-                    throw new Exception("Custom Id must be at least 4 characters long");
+                    throw new Exception("Custom Id must be between 4 and 12 characters");
                 }
                 
                 if (await _context.ShortUrls.AnyAsync(s => s.ShortenedUrlId.Equals(shortUrl.CustomId)))
@@ -196,7 +196,7 @@ namespace UrlShortner.Services.ShortUrlService
             var isValidUrl =
                 !url.Contains("localhost:3000") && Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult)
                                                 && (uriResult.Scheme == Uri.UriSchemeHttp ||
-                                                    uriResult.Scheme == Uri.UriSchemeHttps);
+                                                    uriResult.Scheme == Uri.UriSchemeHttps) && url.Contains(".");
             return isValidUrl;
         }
     }
