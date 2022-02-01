@@ -36,7 +36,7 @@ namespace UrlShortner.Services.AuthService
             _authUserAccessor = authUserAccessor ?? throw new ArgumentNullException(nameof(authUserAccessor));
         }
 
-        public async Task<GetUserDto> Login(User user, string password)
+        public async Task<GetUserDto> LoginAsync(User user, string password)
         {
             var result =
                 _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash,
@@ -49,7 +49,7 @@ namespace UrlShortner.Services.AuthService
 
             if (!_contextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
-                var anonUserGuid = await _authUserAccessor.GetAuthUserId();
+                var anonUserGuid = await _authUserAccessor.GetAuthUserIdAsync();
                 await TransferAnonUserShortUrls(anonUserGuid, user);
             }
 
@@ -71,12 +71,12 @@ namespace UrlShortner.Services.AuthService
             };
         }
 
-        public async Task<IdentityResult> Register(UserRegisterDto user)
+        public async Task<IdentityResult> RegisterAsync(UserRegisterDto user)
         {
             Guid? anonUserGuid = null;
             if (!_contextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
-                anonUserGuid = await _authUserAccessor.GetAuthUserId();
+                anonUserGuid = await _authUserAccessor.GetAuthUserIdAsync();
             }
 
             var newUser = new User() {UserName = user.Username};
@@ -115,7 +115,7 @@ namespace UrlShortner.Services.AuthService
             }
         }
 
-        public Task<GetUserDto> ValidateSession()
+        public Task<GetUserDto> ValidateSessionAsync()
         {
             if (_contextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
@@ -129,12 +129,12 @@ namespace UrlShortner.Services.AuthService
             return null;
         }
 
-        public async Task Logout()
+        public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
         }
 
-        public async Task<User> GetUser(string userName)
+        public async Task<User> GetUserAsync(string userName)
         {
             var existingUser = await _userManager.FindByNameAsync(userName);
 

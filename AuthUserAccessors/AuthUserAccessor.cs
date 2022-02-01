@@ -15,7 +15,7 @@ namespace UrlShortner.AuthUserAccessors
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
         
-        public Task<Guid> GetAuthUserId()
+        public Task<Guid> GetAuthUserIdAsync()
         {
             var userId = _httpContextAccessor.HttpContext.User.Claims
                 .FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);

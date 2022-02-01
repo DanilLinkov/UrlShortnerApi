@@ -15,7 +15,7 @@ namespace UrlShortner.Decryptors
             _secret = secret ?? throw new ArgumentNullException(nameof(secret));
         }
         
-        public Task<string> Decrypt(string cipherText)
+        public Task<string> DecryptAsync(string cipherText)
         {
             byte[] iv = new byte[16];
             byte[] buffer = Convert.FromBase64String(cipherText);

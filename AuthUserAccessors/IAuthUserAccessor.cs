@@ -5,6 +5,6 @@ namespace UrlShortner.AuthUserAccessors
 {
     public interface IAuthUserAccessor
     {
-        Task<Guid> GetAuthUserId();
+        Task<Guid> GetAuthUserIdAsync();
     }
 }

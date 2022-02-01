@@ -24,7 +24,7 @@ namespace UrlShortner.Controllers
         [HttpGet]
         public async Task<IApiResponse> GetAll()
         {
-            var shortUrlsResult = await _shortUrlService.GetAllShortUrls();
+            var shortUrlsResult = await _shortUrlService.GetAllShortUrlsAsync();
             
             return new ApiResponse(shortUrlsResult);
         }
@@ -32,7 +32,7 @@ namespace UrlShortner.Controllers
         [HttpGet("{shortUrl}")]
         public async Task<IApiResponse> Get(string shortUrl)
         {
-            var shortUrlResult = await _shortUrlService.GetShortUrl(shortUrl);
+            var shortUrlResult = await _shortUrlService.GetShortUrlAsync(shortUrl);
 
             if (shortUrlResult == null)
             {
@@ -50,7 +50,7 @@ namespace UrlShortner.Controllers
             
             try
             {
-                newShortUrlResult = await _shortUrlService.CreateShortUrl(shortUrl);
+                newShortUrlResult = await _shortUrlService.CreateShortUrlAsync(shortUrl);
             }
             catch (Exception e)
             {
@@ -74,7 +74,7 @@ namespace UrlShortner.Controllers
             
             try
             {
-                updatedShortUrlResult = await _shortUrlService.UpdateShortUrl(shortUrl);
+                updatedShortUrlResult = await _shortUrlService.UpdateShortUrlAsync(shortUrl);
             }
             catch (Exception e)
             {
@@ -94,7 +94,7 @@ namespace UrlShortner.Controllers
         [HttpDelete]
         public async Task<ApiResponse> Delete([FromBody] DeleteShortUrlDto shortUrl)
         {
-            var deletedShortUrlResult = await _shortUrlService.DeleteShortUrl(shortUrl);
+            var deletedShortUrlResult = await _shortUrlService.DeleteShortUrlAsync(shortUrl);
 
             if (deletedShortUrlResult == null)
             {

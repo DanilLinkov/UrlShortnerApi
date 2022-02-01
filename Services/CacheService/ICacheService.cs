@@ -4,9 +4,9 @@ namespace UrlShortner.Services.CacheService
 {
     public interface ICacheService
     {
-        public Task<T> Get<T>(string key);
-        public Task Set<T>(string key, T value); 
+        public Task<T> GetAsync<T>(string key);
+        public Task SetAsync<T>(string key, T value); 
         
-        public Task Remove(string key);
+        public Task RemoveAsync(string key);
     }
 }

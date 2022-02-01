@@ -5,6 +5,6 @@ namespace UrlShortner.CookieReaders
 {
     public interface ICookieReader
     {
-        Task<string> ReadCookie(string cookieName);
+        Task<string> ReadCookieAsync(string cookieName);
     }
 }

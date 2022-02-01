@@ -18,15 +18,15 @@ namespace UrlShortner.CookieWriters
             _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
         }
         
-        public async Task WriteCookie(string cookieName, string cookieValue)
+        public async Task WriteCookieAsync(string cookieName, string cookieValue)
         {
-            var encryptedCookieValue = await _encryptor.Encrypt(cookieValue);
+            var encryptedCookieValue = await _encryptor.EncryptAsync(cookieValue);
             _httpContextAccessor.HttpContext.Response.Cookies.Append(cookieName, encryptedCookieValue, _cookieOptions);
         }
 
-        public async Task WriteCookie(string cookieName, string cookieValue, DateTime expiration)
+        public async Task WriteCookieAsync(string cookieName, string cookieValue, DateTime expiration)
         {
-            var encryptedCookieValue = await _encryptor.Encrypt(cookieValue);
+            var encryptedCookieValue = await _encryptor.EncryptAsync(cookieValue);
 
             var newCookieOptions = new CookieOptions()
             {

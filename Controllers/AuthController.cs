@@ -24,7 +24,7 @@ namespace UrlShortner.Controllers
         [HttpPost("login")]
         public async Task<IApiResponse> Login([FromBody] UserLoginDto userLoginDto)
         {
-            var user = await _authService.GetUser(userLoginDto.Username);
+            var user = await _authService.GetUserAsync(userLoginDto.Username);
 
             if (user == null)
             {
@@ -32,7 +32,7 @@ namespace UrlShortner.Controllers
                 return new ApiResponse("User not found", null, 404);
             }
 
-            var loginUser = await _authService.Login(user, userLoginDto.Password);
+            var loginUser = await _authService.LoginAsync(user, userLoginDto.Password);
 
             if (loginUser is null)
             {
@@ -48,7 +48,7 @@ namespace UrlShortner.Controllers
         {
             try
             {
-                var loginUser = await _authService.ValidateSession();
+                var loginUser = await _authService.ValidateSessionAsync();
                 
                 return new ApiResponse("Logged in", loginUser, 200);
             }
@@ -62,7 +62,7 @@ namespace UrlShortner.Controllers
         [HttpPost("register")]
         public async Task<IApiResponse> Register([FromBody] UserRegisterDto userRegisterDto)
         {
-            var registerResult = await _authService.Register(userRegisterDto);
+            var registerResult = await _authService.RegisterAsync(userRegisterDto);
             
             if (!registerResult.Succeeded)
             {
@@ -82,7 +82,7 @@ namespace UrlShortner.Controllers
         [HttpPost("logout")]
         public async Task<IApiResponse> Logout()
         {
-            await _authService.Logout();
+            await _authService.LogoutAsync();
             
             return new ApiResponse("Logout successful",null, 200);
         }

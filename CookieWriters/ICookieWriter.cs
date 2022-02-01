@@ -5,8 +5,8 @@ namespace UrlShortner.CookieWriters
 {
     public interface ICookieWriter
     {
-        Task WriteCookie(string cookieName, string cookieValue);
+        Task WriteCookieAsync(string cookieName, string cookieValue);
         
-        Task WriteCookie(string cookieName, string cookieValue, DateTime expiration);
+        Task WriteCookieAsync(string cookieName, string cookieValue, DateTime expiration);
     }
 }

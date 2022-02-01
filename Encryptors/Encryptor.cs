@@ -15,7 +15,7 @@ namespace UrlShortner.Encryptors
             _secret = secret ?? throw new ArgumentNullException(nameof(secret));
         }
         
-        public Task<string> Encrypt(string plainText)
+        public Task<string> EncryptAsync(string plainText)
         {
             byte[] iv = new byte[16];
             byte[] array;

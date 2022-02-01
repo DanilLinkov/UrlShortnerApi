@@ -5,6 +5,6 @@ namespace UrlShortner.Decryptors
 {
     public interface IDecryptor
     {
-        Task<String> Decrypt(String cipherText);
+        Task<String> DecryptAsync(String cipherText);
     }
 }

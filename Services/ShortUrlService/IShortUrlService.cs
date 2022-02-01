@@ -8,10 +8,10 @@ namespace UrlShortner.Services.ShortUrlService
 {
     public interface IShortUrlService
     {
-        Task<List<GetShortUrlDto>> GetAllShortUrls();
-        Task<GetShortUrlDto> GetShortUrl(string shortUrl);
-        Task<GetShortUrlDto> CreateShortUrl(CreateShortUrl shortUrl);
-        Task<GetShortUrlDto> UpdateShortUrl(UpdateShortUrl shortUrl); //UpdateShortUrl
-        Task<List<GetShortUrlDto>> DeleteShortUrl(DeleteShortUrlDto shortUrl); //List<GetShortUrlDto>
+        Task<List<GetShortUrlDto>> GetAllShortUrlsAsync();
+        Task<GetShortUrlDto> GetShortUrlAsync(string shortUrl);
+        Task<GetShortUrlDto> CreateShortUrlAsync(CreateShortUrl shortUrl);
+        Task<GetShortUrlDto> UpdateShortUrlAsync(UpdateShortUrl shortUrl); //UpdateShortUrl
+        Task<List<GetShortUrlDto>> DeleteShortUrlAsync(DeleteShortUrlDto shortUrl); //List<GetShortUrlDto>
     }
 }

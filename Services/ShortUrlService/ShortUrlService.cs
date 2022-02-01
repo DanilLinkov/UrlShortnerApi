@@ -38,9 +38,9 @@ namespace UrlShortner.Services.ShortUrlService
             _clientUrl = clientUrl ?? throw new ArgumentNullException(nameof(clientUrl));
         }
 
-        public async Task<List<GetShortUrlDto>> GetAllShortUrls()
+        public async Task<List<GetShortUrlDto>> GetAllShortUrlsAsync()
         {
-            var userId = await _authUserAccessor.GetAuthUserId();
+            var userId = await _authUserAccessor.GetAuthUserIdAsync();
 
             var shortUrlsResults = await _context.ShortUrls
                 .Where(s => s.UserId.Equals(userId) && s.ExpirationDate > DateTime.Now).ToListAsync();
@@ -49,9 +49,9 @@ namespace UrlShortner.Services.ShortUrlService
             return shortUrlsResultDtoList;
         }
 
-        public async Task<GetShortUrlDto> GetShortUrl(string shortUrl)
+        public async Task<GetShortUrlDto> GetShortUrlAsync(string shortUrl)
         {
-            var shortUrlResult = await _cacheService.Get<ShortUrl>("ShortUrl-"+shortUrl);
+            var shortUrlResult = await _cacheService.GetAsync<ShortUrl>("ShortUrl-"+shortUrl);
 
             if (shortUrlResult == null)
             {
@@ -64,7 +64,7 @@ namespace UrlShortner.Services.ShortUrlService
                     return null;
                 }
 
-                await _cacheService.Set("ShortUrl-"+shortUrlResult.ShortenedUrlId, shortUrlResult);
+                await _cacheService.SetAsync("ShortUrl-"+shortUrlResult.ShortenedUrlId, shortUrlResult);
             }
             
             shortUrlResult.Uses++;
@@ -76,7 +76,7 @@ namespace UrlShortner.Services.ShortUrlService
             return shortUrlResultDto;
         }
 
-        public async Task<GetShortUrlDto> CreateShortUrl(CreateShortUrl shortUrl)
+        public async Task<GetShortUrlDto> CreateShortUrlAsync(CreateShortUrl shortUrl)
         {
             var isValidUrl = IsValidUrl(shortUrl.LongUrl);
 
@@ -85,7 +85,7 @@ namespace UrlShortner.Services.ShortUrlService
                 throw new Exception("Invalid URL format provided");
             }
 
-            var userId = await _authUserAccessor.GetAuthUserId();
+            var userId = await _authUserAccessor.GetAuthUserIdAsync();
 
             var newShortUrl = _mapper.Map<ShortUrl>(shortUrl);
 
@@ -119,7 +119,7 @@ namespace UrlShortner.Services.ShortUrlService
             }
             else
             {
-                var newKey = await _keyGenerator.GenerateKey(8);
+                var newKey = await _keyGenerator.GenerateKeyAsync(8);
 
                 if (newKey == null)
                 {
@@ -137,7 +137,7 @@ namespace UrlShortner.Services.ShortUrlService
             return newShortUrlDto;
         }
 
-        public async Task<GetShortUrlDto> UpdateShortUrl(UpdateShortUrl shortUrl)
+        public async Task<GetShortUrlDto> UpdateShortUrlAsync(UpdateShortUrl shortUrl)
         {
             var isValidUrl = IsValidUrl(shortUrl.LongUrl);
 
@@ -146,7 +146,7 @@ namespace UrlShortner.Services.ShortUrlService
                 throw new Exception("Invalid URL format provided");
             }
 
-            var userId = await _authUserAccessor.GetAuthUserId();
+            var userId = await _authUserAccessor.GetAuthUserIdAsync();
 
             var shortUrlToUpdate = await _context.ShortUrls.Where(s =>
                 s.UserId.Equals(userId) && s.ShortenedUrlId.Equals(shortUrl.ShortenedUrlId) &&
@@ -178,9 +178,9 @@ namespace UrlShortner.Services.ShortUrlService
             return shortUrlDto;
         }
 
-        public async Task<List<GetShortUrlDto>> DeleteShortUrl(DeleteShortUrlDto inputDto)
+        public async Task<List<GetShortUrlDto>> DeleteShortUrlAsync(DeleteShortUrlDto inputDto)
         {
-            var userId = await _authUserAccessor.GetAuthUserId();
+            var userId = await _authUserAccessor.GetAuthUserIdAsync();
 
             var shortUrl = _mapper.Map<DeleteShortUrlDto>(inputDto);
 

@@ -14,7 +14,7 @@ namespace UrlShortner.Services.CacheService
             _cache = cache;
         }
 
-        public async Task<T> Get<T>(string key)
+        public async Task<T> GetAsync<T>(string key)
         {
             var value = await _cache.GetStringAsync(key);
 
@@ -26,7 +26,7 @@ namespace UrlShortner.Services.CacheService
             return default;
         }
 
-        public async Task Set<T>(string key, T value)
+        public async Task SetAsync<T>(string key, T value)
         {
             var options = new DistributedCacheEntryOptions
             {
@@ -37,7 +37,7 @@ namespace UrlShortner.Services.CacheService
             await _cache.SetStringAsync(key, JsonConvert.SerializeObject(value), options);
         }
 
-        public async Task Remove(string key)
+        public async Task RemoveAsync(string key)
         {
             await _cache.RemoveAsync(key);
         }

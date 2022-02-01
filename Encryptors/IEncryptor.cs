@@ -5,6 +5,6 @@ namespace UrlShortner.Encryptors
 {
     public interface IEncryptor
     {
-        Task<String> Encrypt(String plainText);
+        Task<String> EncryptAsync(String plainText);
     }
 }

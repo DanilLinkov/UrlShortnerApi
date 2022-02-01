@@ -33,7 +33,7 @@ namespace UrlShortner.KeyGenerators
             _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         }
         
-        public async Task<string> GenerateKey(int size)
+        public async Task<string> GenerateKeyAsync(int size)
         {
             var client = new HttpClient();
 
@@ -51,7 +51,7 @@ namespace UrlShortner.KeyGenerators
             return null;
         }
 
-        public async Task<string[]> GenerateKey(int count, int size)
+        public async Task<string[]> GenerateKeyAsync(int count, int size)
         {
             var client = new HttpClient();
 

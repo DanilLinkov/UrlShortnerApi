@@ -16,7 +16,7 @@ namespace UrlShortner.CookieReaders
             _decryptor = decryptor ?? throw new ArgumentNullException(nameof(decryptor));
         }
         
-        public async Task<string> ReadCookie(string cookieName)
+        public async Task<string> ReadCookieAsync(string cookieName)
         {
             _httpContextAccessor.HttpContext.Request.Cookies.TryGetValue(cookieName, out var cookieValue);
             
@@ -24,7 +24,7 @@ namespace UrlShortner.CookieReaders
             {
                 try
                 {
-                    return await _decryptor.Decrypt(cookieValue);
+                    return await _decryptor.DecryptAsync(cookieValue);
                 }
                 catch (Exception)
                 {
