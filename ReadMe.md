@@ -3,16 +3,15 @@
 ## Table of contents
 
 1. [Description](#description)
-2. [Quick feature summary](#quick-feature-summary)
-3. [Purpose & Quick feature summary](#Purpose-&-Quick-feature-summary)
-4. [Tech stack](#tech-stack)
-5. [Install & Run](#install-&-run)
-6. [Usage](#usage)
-7. [SQL database tables](#sql-database-tables)
-8. [Session based Authentication & Anonymous user identification](#Session-based-Authentication-&-Anonymous-user-identification)
-9. [Key generation](#key-generation)
-10. [Caching](#caching)
-11. [Clean up of expired short URLs](#Clean-up-of-expired-short-URLs)
+2. [Purpose & Quick feature summary](#Purpose-&-Quick-feature-summary)
+3. [Tech stack](#tech-stack)
+4. [Install & Run](#install-&-run)
+5. [Usage](#usage)
+6. [SQL database tables](#sql-database-tables)
+7. [Session based Authentication & Anonymous user identification](#Session-based-Authentication-&-Anonymous-user-identification)
+8. [Key generation](#key-generation)
+9. [Caching](#caching)
+10. [Clean up of expired short URLs](#Clean-up-of-expired-short-URLs)
 
 ## Description
 
