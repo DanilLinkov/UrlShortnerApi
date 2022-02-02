@@ -14,23 +14,24 @@
 10. [Clean up of expired short URLs](#Clean-up-of-expired-short-URLs)
 
 ## Description
+### Note: for a more visual representation of the functionality explained here please visit a hosted front-end React app here https://shorturlclient.azurewebsites.net/app, also mentioned below along with the source code.
 
 URL shortner API is a .net core web API that shortens provided URLs, stores them in the database and returns an 8 character key of the long URL that can be used to retrieve it. The API allows for full CRUD operations on the shortened URLs (If all authentication & authorization checks pass). Session based Authentication (using Redis) is used and is made to allow for anonymous and authenticated user identification.
 
 This API is currently hosted on Azure with this URL: 
 
-- https://shorturlapi.azurewebsites.net/
+- Azure hosted instance: https://shorturlapi.azurewebsites.net/
 
 The code and hosted URL for the front-end React app can be found here:  
 
-- https://github.com/DanilLinkov/UrlShortnerClient
+- Source code and documentation: https://github.com/DanilLinkov/UrlShortnerClient
 
-- https://shorturlclient.azurewebsites.net/app
+- Azure hosted instance: https://shorturlclient.azurewebsites.net/app
 
 This project also uses a Key Generation Service (personal project created for this) which can be found here: 
 
-- https://github.com/DanilLinkov/KeyGenerationService
-- https://kgsapikeyusagefunction.azurewebsites.net/
+- Source code and documentation: https://github.com/DanilLinkov/KeyGenerationService
+- Azure hosted instance: https://kgsapikeyusagefunction.azurewebsites.net/
 
 ## Purpose & Quick feature summary
 
