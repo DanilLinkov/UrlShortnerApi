@@ -3,12 +3,12 @@
 ## Table of contents
 
 1. [Description](#description)
-2. [Purpose & Quick feature summary](#Purpose-&-Quick-feature-summary)
+2. [Purpose & Quick feature summary](#purpose--quick-feature-summary)
 3. [Tech stack](#tech-stack)
-4. [Install & Run](#install-&-run)
+4. [Install & Run](#install--run)
 5. [Usage](#usage)
 6. [SQL database tables](#sql-database-tables)
-7. [Session based Authentication & Anonymous user identification](#Session-based-Authentication-&-Anonymous-user-identification)
+7. [Session based Authentication & Anonymous user identification](#session-based-authentication--anonymous-user-identification)
 8. [Key generation](#key-generation)
 9. [Caching](#caching)
 10. [Clean up of expired short URLs](#Clean-up-of-expired-short-URLs)
